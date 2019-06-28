@@ -151,7 +151,7 @@ else if ($STtype == 'RETURN TO ZERO') // RM-1881
 else // Return O2X
 {
 	$locId = $flocation;
-	$extCond = " AND (cf_844 - $productFld) > 0 ";
+	$extCond = " AND (cf_844 > $productFld) ";
 }
 
 //RM#5805 - New ST Increment Functionality  /* RM#6127 */
@@ -183,65 +183,58 @@ $extCond .=" AND pc.part_status NOT IN ('Inactive') ";
 //RM # 4064 -added cf_778, cf_784
 //RM#12075 remove commented code
 //RM#5686
-$LineCodeSubLine = "";
-$linecodeArr = explode(",",$lineCodes);
-for($i=0;$i<count($linecodeArr);$i++)
-{
-	$subline = explode(":",$linecodeArr[$i]);
-	if(count($subline)==2)
-	{
-		if($LineCodeSubLine!="")
-    {
-      //RM#8300
-      if(!isset($stforecastorderpoints) || empty($stforecastorderpoints))
-      {
-			$LineCodeSubLine .= " OR ( cf_836 = ".$subline[0]."' AND cf_780 = '".$subline[1]." ) ";
-      }
-      else
-      {
-        $LineCodeSubLine .= " OR ( cf_836 = '".$subline[0]."' AND cf_780 = '".$subline[1]."' ) ";
-      }        
-    }			
-		else
-    {
-      //RM#8300
-      if(!isset($stforecastorderpoints) || empty($stforecastorderpoints))
-      {
-			$LineCodeSubLine = " ( cf_836 = ".$subline[0]."' AND cf_780 = '".$subline[1]." ) ";
+$LineCodeSubLine = '';
+$linecodeArr = explode(',',$lineCodes);
+$linecodeExisted = array();
+$linecodeCount = count($linecodeArr);
+
+// Check if has any special duplicate line code
+for ($i = 0; $i < $linecodeCount; $i++) {
+    $subline = explode(':', $linecodeArr[$i]);
+    if (count($subline < 2)) {
+        array_push($linecodeExisted, trim($linecodeArr[$i]));
     }
-      else
-      {
-        $LineCodeSubLine = " ( cf_836 = 1".$subline[0]."' AND cf_780 = '".$subline[1]."1 ) ";
-      }        
-    }			
-	}
-	else
-	{
-		if($LineCodeSubLine!="")
-    {
-      //RM#8300
-      if(!isset($stforecastorderpoints) || empty($stforecastorderpoints))
-      {
-			$LineCodeSubLine .=" OR ( cf_836 = ".$linecodeArr[$i]." )";
-      }  
-      else
-      {
-        $LineCodeSubLine .=" OR ( cf_836 = '".$linecodeArr[$i]."' )";
-      }
-    }			
-		else
-    {
-      //RM#8300
-      if(!isset($stforecastorderpoints) || empty($stforecastorderpoints))
-      {
-			$LineCodeSubLine = " ( cf_836 = ".$linecodeArr[$i]." ) ";
-    }
-      else
-      {
-        $LineCodeSubLine = " ( cf_836 = '".$linecodeArr[$i]."' ) ";
-  }
 }
-	}
+
+for($i=0; $i < $linecodeCount; $i++)
+{
+	$subline = explode(':',$linecodeArr[$i]);
+	if(count($subline) == 2)
+	{
+        if (!in_array(trim($subline[0]), $linecodeExisted)) {
+            if (!empty($LineCodeSubLine)) {
+                //RM#8300
+                if (!isset($stforecastorderpoints) || empty($stforecastorderpoints)) {
+                    $LineCodeSubLine .= " OR ( cf_836 = " . $subline[0] . "' AND cf_780 = '" . $subline[1] . " ) ";
+                } else {
+                    $LineCodeSubLine .= " OR ( cf_836 = '" . $subline[0] . "' AND cf_780 = '" . $subline[1] . "' ) ";
+                }
+            } else {
+                //RM#8300
+                if (!isset($stforecastorderpoints) || empty($stforecastorderpoints)) {
+                    $LineCodeSubLine = " ( cf_836 = " . $subline[0] . "' AND cf_780 = '" . $subline[1] . " ) ";
+                } else {
+                    $LineCodeSubLine = " ( cf_836 = 1" . $subline[0] . "' AND cf_780 = '" . $subline[1] . "1 ) ";
+                }
+            }
+        }
+	} else {
+        if (!empty($LineCodeSubLine)) {
+            //RM#8300
+            if (!isset($stforecastorderpoints) || empty($stforecastorderpoints)) {
+                $LineCodeSubLine .= " OR ( cf_836 = " . $linecodeArr[$i] . " )";
+            } else {
+                $LineCodeSubLine .= " OR ( cf_836 = '" . $linecodeArr[$i] . "' )";
+            }
+        } else {
+            //RM#8300
+            if (!isset($stforecastorderpoints) || empty($stforecastorderpoints)) {
+                $LineCodeSubLine = " ( cf_836 = " . $linecodeArr[$i] . " ) ";
+            } else {
+                $LineCodeSubLine = " ( cf_836 = '" . $linecodeArr[$i] . "' ) ";
+            }
+        }
+    }
 }
 
 //echo '<br> LineCodeSubLine : ';
